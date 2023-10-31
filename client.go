@@ -40,22 +40,23 @@ type ResponseValidator func(c *Client, resp *http.Response) error
 
 // Client handles an incoming server stream
 type Client struct {
-	Connected         bool
-	connectedcb       ConnCallback
-	Connection        *http.Client
-	disconnectcb      ConnCallback
-	EncodingBase64    bool
-	Headers           map[string]string
-	LastEventID       atomic.Value // []byte
-	maxBufferSize     int
-	mu                sync.Mutex
-	ReconnectNotify   backoff.Notify
-	ReconnectStrategy backoff.BackOff
-	Request           *http.Request
-	ResponseValidator ResponseValidator
-	Retry             time.Time
-	subscribed        map[chan *Event]chan struct{}
-	URL               string
+	Connected          bool
+	connectedcb        ConnCallback
+	Connection         *http.Client
+	disconnectcb       ConnCallback
+	EncodingBase64     bool
+	Headers            map[string]string
+	LastEventID        atomic.Value // []byte
+	maxBufferSize      int
+	mu                 sync.Mutex
+	ReconnectNotify    backoff.Notify
+	ReconnectStrategy  backoff.BackOff
+	Request            *http.Request
+	ResponseValidator  ResponseValidator
+	Retry              time.Time
+	subscribed         map[chan *Event]chan struct{}
+	URL                string
+	ResponseDataFields []string
 }
 
 // NewClient creates a new client
@@ -364,6 +365,15 @@ func (c *Client) processEvent(msg []byte) (event *Event, err error) {
 		case bytes.HasPrefix(line, headerRetry):
 			e.Retry = append([]byte(nil), trimHeader(len(headerRetry), line)...)
 		default:
+			if c.ResponseDataFields != nil && len(c.ResponseDataFields) > 0 {
+				e.CustomFields = make(map[string][]byte)
+				for _, field := range c.ResponseDataFields {
+					fieldBytes := []byte(field + ":")
+					if bytes.HasPrefix(line, fieldBytes) {
+						e.CustomFields[field] = trimHeader(len(fieldBytes), line)
+					}
+				}
+			}
 			// Ignore any garbage that doesn't match what we're looking for.
 		}
 	}

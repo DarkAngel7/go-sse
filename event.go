@@ -14,16 +14,29 @@ import (
 
 // Event holds all of the event source fields
 type Event struct {
-	timestamp time.Time
-	ID        []byte
-	Data      []byte
-	Event     []byte
-	Retry     []byte
-	Comment   []byte
+	timestamp    time.Time
+	ID           []byte
+	Data         []byte
+	Event        []byte
+	Retry        []byte
+	Comment      []byte
+	CustomFields map[string][]byte
 }
 
 func (e *Event) hasContent() bool {
-	return len(e.ID) > 0 || len(e.Data) > 0 || len(e.Event) > 0 || len(e.Retry) > 0
+	has := len(e.ID) > 0 || len(e.Data) > 0 || len(e.Event) > 0 || len(e.Retry) > 0
+	if has {
+		return true
+	}
+	if len(e.CustomFields) == 0 {
+		return false
+	}
+	for _, v := range e.CustomFields {
+		if len(v) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // EventStreamReader scans an io.Reader looking for EventStream messages.
