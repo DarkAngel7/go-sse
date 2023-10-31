@@ -1,9 +1,9 @@
-module github.com/r3labs/sse/v2
+module github.com/DarkAngel7/go-sse
 
-go 1.13
+go 1.21
 
 require (
-	github.com/stretchr/testify v1.7.0
-	golang.org/x/net v0.0.0-20191116160921-f9c825593386 // indirect
+	github.com/stretchr/testify v1.8.4
+	golang.org/x/net v0.17.0 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0
 )
